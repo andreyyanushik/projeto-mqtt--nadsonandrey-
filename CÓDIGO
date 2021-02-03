@@ -1,0 +1,80 @@
+#include <PubSubClient.h>
+
+#include <UIPEthernet.h>
+#include <utility/logging.h>
+
+#include <SPI.h>
+
+
+//Define o endereço MAC que será utilizado
+byte mac[] = {0xCC, 0x64, 0xE0, 0xFC, 0x09, 0x2F};
+
+boolean mensagem;
+
+//Inicia o cliente Ethernet
+EthernetClient client;
+
+PubSubClient mqttClient(client);
+
+int pino2 =2; // Variável Pino 2.
+bool estado_sensor; // Variável para armazanar o estado do sensor.
+
+
+void setup() {
+    //Inicia o controlador Ethernet e solicita um IP para o servidor de DHCP
+    Ethernet.begin(mac);
+
+    //Inicia o monitor Serial
+    Serial.begin(9600);
+
+    mqttClient.setServer("54.144.190.205", 1883);
+
+    //Exibe no Monitor Serial as informações sobre o IP do Arduino
+    Serial.print("O IP do Arduino e: ");
+    Serial.println(Ethernet.localIP());
+
+    //Exibe no Monitor Serial as informações sobre a Máscara de Rede do Arduino
+    Serial.print("A Mascara de Rede do Arduino e: ");
+    Serial.println(Ethernet.subnetMask());
+
+    //Exibe no Monitor Serial as informações sobre o Gateway do Arduino
+    Serial.print("O Gateway do Arduino e: ");
+    Serial.println(Ethernet.gatewayIP());
+
+    //Exibe uma linha em branco
+    Serial.println("");
+    
+    pinMode(pino2,INPUT_PULLUP); // Coloca o Pino 2 como Entrada.
+   
+    
+
+
+}
+
+void loop() {
+    
+ 
+    mqttClient.loop();
+
+
+    estado_sensor = digitalRead(pino2); // Efetua a leitura do Pino 2 e armazena o valor obtido da variável.
+
+    if(estado_sensor == 0) {
+    
+    Serial.println("O RACK ESTA FECHADO ");
+    mqttClient.connect("nadsonandrey");
+    mensagem = mqttClient.publish("nadsonandrey-t", "FECHADO!");
+    Serial.println(mensagem);
+    }
+
+    if(estado_sensor == 1) {
+
+
+   
+    Serial.println("O RACK ESTA ABERTO ");
+    mqttClient.connect("nadsonandrey");
+    mensagem = mqttClient.publish("nadsonandrey-t", "ABERTO!");
+    Serial.println(mensagem); 
+
+    }
+}
